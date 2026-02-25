@@ -1,0 +1,28 @@
+{
+  "name": "machine-health-backend",
+  "version": "1.0.0",
+  "description": "Machine Health Prediction System Backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "load-data": "node loadData.js",
+    "init-db": "psql -U postgres -d machine_health_db -f database/init.sql"
+  },
+  "keywords": [
+    "machine-health",
+    "predictive-maintenance",
+    "nodejs",
+    "express",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "pg": "^8.13.0"
+  }
+}

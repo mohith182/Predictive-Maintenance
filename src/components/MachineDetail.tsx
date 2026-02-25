@@ -1,5 +1,8 @@
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import type { MachineData } from "@/lib/mockData";
+import type { MachineData } from "@/lib/api";
+import type { SensorReading } from "@/lib/queries";
+import { useLiveSensorData } from "@/lib/queries";
 import HealthGauge from "./HealthGauge";
 import SensorChart from "./SensorChart";
 import InsightsPanel from "./InsightsPanel";
@@ -9,7 +12,34 @@ interface MachineDetailProps {
   machine: MachineData;
 }
 
+const MAX_HISTORY_POINTS = 72;
+
 const MachineDetail = ({ machine }: MachineDetailProps) => {
+  // Live sensor data state - starts with machine's sensor history
+  const [liveHistory, setLiveHistory] = useState<SensorReading[]>(machine.sensorHistory);
+  
+  // Fetch live sensor data every 2 seconds
+  const { data: liveSensorData } = useLiveSensorData(machine.machineId, true);
+  
+  // Update live history when new data comes in
+  useEffect(() => {
+    if (liveSensorData) {
+      setLiveHistory(prev => {
+        const newHistory = [...prev, liveSensorData];
+        // Keep only the last MAX_HISTORY_POINTS
+        if (newHistory.length > MAX_HISTORY_POINTS) {
+          return newHistory.slice(-MAX_HISTORY_POINTS);
+        }
+        return newHistory;
+      });
+    }
+  }, [liveSensorData]);
+  
+  // Reset history when machine changes
+  useEffect(() => {
+    setLiveHistory(machine.sensorHistory);
+  }, [machine.machineId]);
+
   const statusLabel = {
     healthy: { text: "HEALTHY", class: "text-success bg-success/10 border-success/20" },
     warning: { text: "WARNING", class: "text-warning bg-warning/10 border-warning/20" },
@@ -55,37 +85,41 @@ const MachineDetail = ({ machine }: MachineDetailProps) => {
         </div>
       </div>
 
-      {/* Health Trend */}
+      {/* Health Trend - Live */}
       <SensorChart
-        data={machine.sensorHistory}
+        data={liveHistory}
         dataKey="healthScore"
-        label="Health Trend (72h)"
+        label="Health Trend (Live)"
         unit="%"
         color="hsl(185, 80%, 50%)"
+        isLive
       />
 
-      {/* Sensor Charts */}
+      {/* Sensor Charts - Live */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SensorChart
-          data={machine.sensorHistory}
+          data={liveHistory}
           dataKey="temperature"
           label="Temperature"
           unit="°C"
           color="hsl(0, 72%, 55%)"
+          isLive
         />
         <SensorChart
-          data={machine.sensorHistory}
+          data={liveHistory}
           dataKey="vibration"
           label="Vibration"
           unit="mm/s"
           color="hsl(38, 92%, 55%)"
+          isLive
         />
         <SensorChart
-          data={machine.sensorHistory}
+          data={liveHistory}
           dataKey="current"
           label="Electrical Current"
           unit="A"
           color="hsl(185, 80%, 50%)"
+          isLive
         />
       </div>
 
