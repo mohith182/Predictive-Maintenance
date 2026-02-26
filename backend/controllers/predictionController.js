@@ -4,9 +4,12 @@
  * Handles business logic for ML predictions.
  * Includes a simulated ML prediction function that can be
  * replaced with actual model calls.
+ * 
+ * Automatically sends email alerts for WARNING and CRITICAL status.
  */
 
 const pool = require('../db');
+const { sendHealthAlert } = require('../services/emailService');
 
 /**
  * Simulate ML Prediction
@@ -57,14 +60,15 @@ const simulatePrediction = (temperature, vibration, current) => {
 /**
  * Make a new prediction
  * 
- * Accepts sensor readings, runs prediction, and stores result
+ * Accepts sensor readings, runs prediction, stores result,
+ * and automatically sends email alert if WARNING or CRITICAL
  * 
  * @route   POST /api/predict
- * @body    { temperature, vibration, current }
+ * @body    { machine_id, temperature, vibration, current, user_email }
  */
 const makePrediction = async (req, res) => {
   try {
-    const { temperature, vibration, current } = req.body;
+    const { machine_id, temperature, vibration, current, user_email } = req.body;
 
     // Validate required fields
     if (temperature === undefined || vibration === undefined || current === undefined) {
@@ -112,12 +116,30 @@ const makePrediction = async (req, res) => {
       prediction.healthStatus,
     ]);
 
+    // Step 5: Send email alert if WARNING or CRITICAL (automatic)
+    let emailResult = null;
+    if (user_email && (prediction.healthStatus === 'WARNING' || prediction.healthStatus === 'CRITICAL')) {
+      console.log(`[PREDICTION] Health status is ${prediction.healthStatus}, sending email to ${user_email}`);
+      
+      emailResult = await sendHealthAlert(user_email, {
+        machine_id: machine_id || `MCH-${reading.id}`,
+        temperature,
+        vibration,
+        current,
+        predicted_rul: prediction.predictedRUL,
+        health_status: prediction.healthStatus,
+        health_percentage: prediction.healthPercentage,
+        confidence: prediction.confidence,
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'Prediction completed successfully',
       data: {
         reading: {
           id: reading.id,
+          machine_id: machine_id || `MCH-${reading.id}`,
           temperature,
           vibration,
           current,
@@ -132,6 +154,15 @@ const makePrediction = async (req, res) => {
           health_percentage: prediction.healthPercentage,
           confidence: prediction.confidence,
           created_at: predictionResult.rows[0].created_at,
+        },
+        email_alert: emailResult ? {
+          sent: emailResult.success && !emailResult.skipped,
+          type: emailResult.type || null,
+          skipped: emailResult.skipped || false,
+          reason: emailResult.reason || null,
+        } : {
+          sent: false,
+          reason: user_email ? 'Status is NORMAL/HEALTHY' : 'No user email provided',
         },
       },
     });

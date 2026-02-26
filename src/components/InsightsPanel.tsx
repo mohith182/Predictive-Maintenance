@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
-import { Brain, Clock, AlertTriangle, Wrench } from "lucide-react";
-import type { MachineData } from "@/lib/mockData";
+import { Brain, Clock, AlertTriangle, Wrench, Target, TrendingUp } from "lucide-react";
+import type { MachineData } from "@/lib/api";
 
 interface InsightsPanelProps {
   machine: MachineData;
@@ -13,6 +13,9 @@ const InsightsPanel = ({ machine }: InsightsPanelProps) => {
     return "text-destructive";
   };
 
+  // Calculate prediction confidence based on health consistency
+  const confidence = Math.min(95, 75 + (machine.healthScore / 10));
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -24,9 +27,13 @@ const InsightsPanel = ({ machine }: InsightsPanelProps) => {
         <h3 className="font-mono text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Predictive Insights
         </h3>
+        <span className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
+          <Target className="h-3 w-3" />
+          {confidence.toFixed(0)}% confidence
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         {/* RUL */}
         <div className="rounded-lg bg-secondary/50 p-3">
           <div className="flex items-center gap-2 mb-2">
@@ -36,9 +43,9 @@ const InsightsPanel = ({ machine }: InsightsPanelProps) => {
             </span>
           </div>
           <span className={`font-mono text-2xl font-bold ${getRulColor(machine.rul)}`}>
-            {machine.rul}
+            {Math.round(machine.rul)}
           </span>
-          <span className="text-xs text-muted-foreground ml-1">days</span>
+          <span className="text-xs text-muted-foreground ml-1">cycles</span>
         </div>
 
         {/* Risk Level */}
@@ -49,11 +56,27 @@ const InsightsPanel = ({ machine }: InsightsPanelProps) => {
               Risk Level
             </span>
           </div>
-          <span className={`font-mono text-sm font-bold uppercase ${
+          <span className={`font-mono text-lg font-bold uppercase ${
             machine.riskLevel === 'low' ? 'text-success' :
             machine.riskLevel === 'medium' ? 'text-warning' : 'text-destructive'
           }`}>
             {machine.riskLevel}
+          </span>
+        </div>
+
+        {/* Health Trend */}
+        <div className="rounded-lg bg-secondary/50 p-3">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Health Score
+            </span>
+          </div>
+          <span className={`font-mono text-2xl font-bold ${
+            machine.healthScore > 70 ? 'text-success' :
+            machine.healthScore >= 40 ? 'text-warning' : 'text-destructive'
+          }`}>
+            {Math.round(machine.healthScore)}%
           </span>
         </div>
 
@@ -84,6 +107,23 @@ const InsightsPanel = ({ machine }: InsightsPanelProps) => {
           </span>
           <p className="text-xs text-foreground mt-1 leading-relaxed">
             {machine.rootCause}
+          </p>
+        </motion.div>
+      )}
+
+      {/* Health Status Message */}
+      {!machine.rootCause && machine.healthScore > 70 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mt-3 rounded-lg border border-success/20 bg-success/5 p-3"
+        >
+          <span className="text-[10px] uppercase tracking-wider text-success font-semibold">
+            System Status
+          </span>
+          <p className="text-xs text-foreground mt-1 leading-relaxed">
+            All systems operating within normal parameters. No maintenance required at this time.
           </p>
         </motion.div>
       )}

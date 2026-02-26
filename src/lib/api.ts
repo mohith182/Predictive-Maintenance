@@ -1,24 +1,33 @@
 // API service for connecting to the FastAPI backend
 
-// Dynamically determine the API URL based on current host
-// This allows the frontend to work both locally and from network IPs
+// Dynamically determine the API URL based on environment
 function getApiBaseUrl(): string {
-  // If explicitly set via environment variable, use that
+  // Production: Use environment variable (required)
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
   
-  // In browser, use the same hostname but port 8001 for the backend
-  if (typeof window !== 'undefined') {
+  // Development fallback: Use same hostname with port 8000
+  if (typeof window !== 'undefined' && import.meta.env.DEV) {
     const hostname = window.location.hostname;
-    return `http://${hostname}:8001`;
+    // Only use localhost fallback in development
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return `http://${hostname}:8000`;
+    }
   }
   
-  // Fallback to localhost
-  return 'http://localhost:8001';
+  // Production should never reach here - throw error
+  if (import.meta.env.PROD) {
+    console.error('VITE_API_URL is not set in production environment!');
+    throw new Error('API URL not configured. Set VITE_API_URL environment variable.');
+  }
+  
+  // Development fallback
+  return 'http://localhost:8000';
 }
 
 const API_BASE_URL = getApiBaseUrl();
+export { API_BASE_URL };
 
 export interface SensorReading {
   timestamp: string;
@@ -59,6 +68,64 @@ export interface FleetSummary {
   warning: number;
   critical: number;
   avgHealth: number;
+  totalMachines?: number;
+  healthyCount?: number;
+  warningCount?: number;
+  criticalCount?: number;
+}
+
+export interface SimulationRequest {
+  machineId: string;
+  temperature: number;
+  vibration: number;
+  current: number;
+  loadFactor?: number;
+  runtimeHours?: number;
+}
+
+export interface SimulationResult {
+  machineId: string;
+  simulatedHealth: number;
+  currentHealth: number;
+  healthDelta: number;
+  status: string;
+  estimatedRUL: number;
+  recommendations: Array<{
+    type: string;
+    message: string;
+    impact: string;
+  }>;
+}
+
+export interface Recommendation {
+  id: string;
+  title: string;
+  description: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  estimatedCost: number;
+  estimatedTime: string;
+  actions: string[];
+}
+
+export interface SHAPContribution {
+  feature: string;
+  contribution: number;
+  value: number;
+  unit: string;
+  description?: string;
+}
+
+export interface CostEstimate {
+  machineId: string;
+  healthScore: number;
+  downtimeCostPerHour: number;
+  estimatedRepairHours: number;
+  laborCost: number;
+  partsCost: number;
+  estimatedLoss: number;
+  preventiveSavings: number;
+  isHighCost: boolean;
+  currency: string;
 }
 
 export interface PredictionResult {
@@ -117,6 +184,74 @@ class ApiService {
     } catch {
       return false;
     }
+  }
+
+  // Subscribe email for alerts
+  async subscribeEmail(email: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${this.baseUrl}/api/alerts/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return response.json();
+  }
+
+  // Check for critical machines and send alerts
+  async checkAndSendAlerts(email: string): Promise<{ success: boolean; alertsSent: number }> {
+    const response = await fetch(`${this.baseUrl}/api/alerts/check`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return response.json();
+  }
+
+  // Send test alert
+  async sendTestAlert(email: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(`${this.baseUrl}/api/alerts/test`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    return response.json();
+  }
+
+  // Fleet status with all machines
+  async getFleetStatus(): Promise<{ machines: MachineData[]; summary: FleetSummary }> {
+    return this.fetch('/api/fleet/status');
+  }
+
+  // What-If Simulation
+  async runSimulation(request: SimulationRequest): Promise<SimulationResult> {
+    const response = await fetch(`${this.baseUrl}/api/simulate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) {
+      throw new Error(`Simulation failed: ${response.status}`);
+    }
+    return response.json();
+  }
+
+  // Get maintenance recommendations
+  async getRecommendations(machineId: string): Promise<{ machineId: string; healthScore: number; recommendations: Recommendation[] }> {
+    return this.fetch(`/api/recommendations/${machineId}`);
+  }
+
+  // Get SHAP values for explainable AI
+  async getSHAPValues(machineId: string): Promise<{ 
+    machineId: string;
+    baselineHealth: number;
+    predictedHealth: number;
+    contributions: SHAPContribution[];
+  }> {
+    return this.fetch(`/api/shap/${machineId}`);
+  }
+
+  // Get cost estimate
+  async getCostEstimate(machineId: string): Promise<CostEstimate> {
+    return this.fetch(`/api/cost-estimate/${machineId}`);
   }
 }
 

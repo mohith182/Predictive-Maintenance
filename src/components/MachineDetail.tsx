@@ -6,7 +6,14 @@ import { useLiveSensorData } from "@/lib/queries";
 import HealthGauge from "./HealthGauge";
 import SensorChart from "./SensorChart";
 import InsightsPanel from "./InsightsPanel";
-import { Cpu, MapPin, Calendar, Activity } from "lucide-react";
+import DigitalTwin from "./DigitalTwin";
+import SHAPChart from "./SHAPChart";
+import FailureTimeline from "./FailureTimeline";
+import CostEstimator from "./CostEstimator";
+import SimulationPanel from "./SimulationPanel";
+import RecommendationsPanel from "./RecommendationsPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Cpu, MapPin, Calendar, Activity, BrainCircuit, Timer, IndianRupee, FlaskConical, Wrench, Box } from "lucide-react";
 
 interface MachineDetailProps {
   machine: MachineData;
@@ -125,6 +132,130 @@ const MachineDetail = ({ machine }: MachineDetailProps) => {
 
       {/* Insights */}
       <InsightsPanel machine={machine} />
+
+      {/* Advanced Features Tabs */}
+      <div className="glass rounded-xl p-4">
+        <Tabs defaultValue="twin" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-1 h-auto">
+            <TabsTrigger value="twin" className="flex items-center gap-1 text-xs py-2">
+              <Box className="h-3 w-3" />
+              <span className="hidden sm:inline">Digital Twin</span>
+            </TabsTrigger>
+            <TabsTrigger value="shap" className="flex items-center gap-1 text-xs py-2">
+              <BrainCircuit className="h-3 w-3" />
+              <span className="hidden sm:inline">SHAP</span>
+            </TabsTrigger>
+            <TabsTrigger value="timeline" className="flex items-center gap-1 text-xs py-2">
+              <Timer className="h-3 w-3" />
+              <span className="hidden sm:inline">Timeline</span>
+            </TabsTrigger>
+            <TabsTrigger value="cost" className="flex items-center gap-1 text-xs py-2">
+              <IndianRupee className="h-3 w-3" />
+              <span className="hidden sm:inline">Cost</span>
+            </TabsTrigger>
+            <TabsTrigger value="simulate" className="flex items-center gap-1 text-xs py-2">
+              <FlaskConical className="h-3 w-3" />
+              <span className="hidden sm:inline">Simulate</span>
+            </TabsTrigger>
+            <TabsTrigger value="recommend" className="flex items-center gap-1 text-xs py-2">
+              <Wrench className="h-3 w-3" />
+              <span className="hidden sm:inline">Maintenance</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="twin" className="mt-4">
+            <DigitalTwin
+              machineId={machine.machineId}
+              machineName={machine.name}
+              machineType={machine.type}
+              healthScore={machine.healthScore}
+              sensorData={{
+                temperature: liveHistory[liveHistory.length - 1]?.temperature || 65,
+                vibration: liveHistory[liveHistory.length - 1]?.vibration || 2.5,
+                current: liveHistory[liveHistory.length - 1]?.current || 15,
+              }}
+              status={machine.status}
+            />
+          </TabsContent>
+
+          <TabsContent value="shap" className="mt-4">
+            <SHAPChart
+              contributions={[
+                { 
+                  feature: "temperature", 
+                  contribution: machine.healthScore >= 70 ? 5 : -15, 
+                  value: liveHistory[liveHistory.length - 1]?.temperature || 65, 
+                  unit: "°C" 
+                },
+                { 
+                  feature: "vibration", 
+                  contribution: machine.healthScore >= 70 ? 3 : -10, 
+                  value: liveHistory[liveHistory.length - 1]?.vibration || 2.5, 
+                  unit: "mm/s" 
+                },
+                { 
+                  feature: "current", 
+                  contribution: machine.healthScore >= 70 ? 2 : -5, 
+                  value: liveHistory[liveHistory.length - 1]?.current || 15, 
+                  unit: "A" 
+                },
+                { 
+                  feature: "pressure", 
+                  contribution: machine.healthScore >= 70 ? 4 : -3, 
+                  value: 95 + Math.random() * 10, 
+                  unit: "PSI" 
+                },
+                { 
+                  feature: "runtime_hours", 
+                  contribution: machine.healthScore >= 70 ? 1 : -8, 
+                  value: 2500 + Math.random() * 500, 
+                  unit: "hrs" 
+                },
+              ]}
+              baselineHealth={75}
+              predictedHealth={machine.healthScore}
+            />
+          </TabsContent>
+
+          <TabsContent value="timeline" className="mt-4">
+            <FailureTimeline
+              currentHealth={machine.healthScore}
+              rul={machine.rul}
+              startDate={new Date()}
+            />
+          </TabsContent>
+
+          <TabsContent value="cost" className="mt-4">
+            <CostEstimator
+              downtimeCostPerHour={5000}
+              estimatedRepairHours={machine.status === "critical" ? 8 : machine.status === "warning" ? 4 : 2}
+              estimatedLoss={machine.status === "critical" ? 80000 : machine.status === "warning" ? 35000 : 15000}
+              isHighCost={machine.status === "critical"}
+              healthPercentage={machine.healthScore}
+            />
+          </TabsContent>
+
+          <TabsContent value="simulate" className="mt-4">
+            <SimulationPanel
+              machineId={machine.machineId}
+              currentHealth={machine.healthScore}
+              currentSensors={{
+                temperature: liveHistory[liveHistory.length - 1]?.temperature || 65,
+                vibration: liveHistory[liveHistory.length - 1]?.vibration || 2.5,
+                current: liveHistory[liveHistory.length - 1]?.current || 15,
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="recommend" className="mt-4">
+            <RecommendationsPanel
+              machineId={machine.machineId}
+              healthScore={machine.healthScore}
+              status={machine.status}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </motion.div>
   );
 };

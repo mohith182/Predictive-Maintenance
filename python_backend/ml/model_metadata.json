@@ -1,0 +1,50 @@
+{
+  "model_version": "2.0",
+  "algorithm": "GradientBoosting",
+  "training_date": "2026-02-26T15:02:09.065383",
+  "feature_names": [
+    "temperature",
+    "vibration",
+    "current",
+    "pressure",
+    "runtime_hours"
+  ],
+  "label_encoding": {
+    "NORMAL": 0,
+    "WARNING": 1,
+    "CRITICAL": 2
+  },
+  "classifier_metrics": {
+    "accuracy": 0.998,
+    "precision": 0.998,
+    "recall": 0.998,
+    "f1_score": 0.998,
+    "feature_importance": {
+      "temperature": 0.004294082844858607,
+      "vibration": 0.014583501398193194,
+      "current": 0.003460064637673284,
+      "pressure": 0.0014600085221180181,
+      "runtime_hours": 0.9762023425971569
+    }
+  },
+  "regressor_metrics": {
+    "mae": 15.147921875330619,
+    "rmse": 18.18003706679134,
+    "r2_score": 0.8177168575567058,
+    "feature_importance": {
+      "temperature": 0.017534296652651413,
+      "vibration": 0.028182881208833565,
+      "current": 0.01881045760135172,
+      "pressure": 0.015761166503663836,
+      "runtime_hours": 0.9197111980334995
+    }
+  },
+  "health_thresholds": {
+    "normal_rul_min": 80,
+    "warning_rul_range": [
+      30,
+      80
+    ],
+    "critical_rul_max": 30
+  }
+}

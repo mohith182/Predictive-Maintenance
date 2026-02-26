@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Mail, KeyRound, ArrowRight } from "lucide-react";
+import api from "../lib/api";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ const Login = () => {
     }, 1500);
   };
 
-  const handleOtpChange = (index: number, value: string) => {
+  const handleOtpChange = async (index: number, value: string) => {
     if (value.length > 1) return;
     const newOtp = [...otp];
     newOtp[index] = value;
@@ -42,6 +43,17 @@ const Login = () => {
     // Auto-submit when complete
     if (newOtp.every(d => d !== "")) {
       setLoading(true);
+      // Store email in localStorage for alert notifications
+      localStorage.setItem('userEmail', email);
+      
+      // Subscribe email for machine failure alerts
+      try {
+        await api.subscribeEmail(email);
+        console.log('Email subscribed for alerts:', email);
+      } catch (err) {
+        console.log('Could not subscribe email for alerts:', err);
+      }
+      
       setTimeout(() => {
         navigate("/dashboard");
       }, 1000);
@@ -76,7 +88,7 @@ const Login = () => {
             <Activity className="h-8 w-8 text-primary" />
           </motion.div>
           <h1 className="font-mono text-2xl font-bold text-primary text-glow-primary tracking-wider">
-            MOS101
+            Maintenix AI
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Predictive Maintenance System
@@ -179,7 +191,7 @@ const Login = () => {
         </div>
 
         <p className="text-center text-[10px] text-muted-foreground mt-6">
-          Secured by MOS101 Industrial Systems
+          Secured by Maintenix AI Industrial Systems
         </p>
       </motion.div>
     </div>

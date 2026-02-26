@@ -1,5 +1,6 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import type { SensorReading } from "@/lib/api";
 
 interface SensorChartProps {
@@ -13,11 +14,52 @@ interface SensorChartProps {
 }
 
 const SensorChart = ({ data, dataKey, label, unit, color, glowClass = "", isLive = false }: SensorChartProps) => {
-  const last24 = data.slice(-24);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Update current time every second for live display
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const formatTime = (ts: string) => {
+  // Get current IST time
+  const getISTTime = (date: Date) => {
+    const utcTime = date.getTime() + date.getTimezoneOffset() * 60000;
+    return new Date(utcTime + (5.5 * 60 * 60 * 1000));
+  };
+
+  // Transform data to show current time at the end
+  // Each data point represents 1 hour interval, ending at current time
+  const transformedData = data.slice(-24).map((reading, index, arr) => {
+    const hoursAgo = arr.length - 1 - index;
+    const timestamp = new Date(currentTime.getTime() - hoursAgo * 3600000);
+    return {
+      ...reading,
+      timestamp: timestamp.toISOString(),
+    };
+  });
+
+  // Convert to IST (Indian Standard Time = UTC+5:30)
+  const formatTimeIST = (ts: string) => {
     const d = new Date(ts);
-    return `${d.getHours().toString().padStart(2, "0")}:00`;
+    const istTime = getISTTime(d);
+    
+    const hours = istTime.getHours().toString().padStart(2, "0");
+    const minutes = istTime.getMinutes().toString().padStart(2, "0");
+    const seconds = istTime.getSeconds().toString().padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
+  // Get current IST time for live display
+  const getCurrentIST = () => {
+    const istTime = getISTTime(currentTime);
+    
+    const hours = istTime.getHours().toString().padStart(2, "0");
+    const minutes = istTime.getMinutes().toString().padStart(2, "0");
+    const seconds = istTime.getSeconds().toString().padStart(2, "0");
+    return `${hours}:${minutes}:${seconds}`;
   };
 
   const CustomTooltip = ({ active, payload }: any) => {
@@ -47,15 +89,13 @@ const SensorChart = ({ data, dataKey, label, unit, color, glowClass = "", isLive
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
               <span className="text-[10px] text-green-500 font-mono uppercase">Live</span>
+              <span className="text-[10px] text-green-400 font-mono ml-1">IST {getCurrentIST()}</span>
             </span>
           )}
         </div>
-        <span className="font-mono text-sm font-bold" style={{ color }}>
-          {last24[last24.length - 1]?.[dataKey]} {unit}
-        </span>
       </div>
       <ResponsiveContainer width="100%" height={120}>
-        <AreaChart data={last24}>
+        <AreaChart data={transformedData}>
           <defs>
             <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.3} />
@@ -65,7 +105,7 @@ const SensorChart = ({ data, dataKey, label, unit, color, glowClass = "", isLive
           <CartesianGrid strokeDasharray="3 3" stroke="hsl(220 15% 18%)" />
           <XAxis
             dataKey="timestamp"
-            tickFormatter={formatTime}
+            tickFormatter={formatTimeIST}
             tick={{ fontSize: 10, fill: "hsl(215 15% 55%)" }}
             axisLine={false}
             tickLine={false}
