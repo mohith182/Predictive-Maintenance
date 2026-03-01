@@ -47,6 +47,9 @@ class Settings(BaseSettings):
     SMTP_FROM_NAME: str = "UptimeAI"
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 24
     
+    # Frontend (defined first for use in Google OAuth)
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:8080")
+    
     # Google OAuth
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
@@ -64,9 +67,6 @@ class Settings(BaseSettings):
     RATE_LIMIT_SIGNUP: str = "3/minute"
     RATE_LIMIT_API: str = "100/minute"
     PASSWORD_MIN_LENGTH: int = 8
-    
-    # Frontend
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:8080")
     CORS_ORIGINS: str = os.getenv(
         "CORS_ORIGINS",
         "http://localhost:8080,http://localhost:8081,http://localhost:8082,http://localhost:8083,http://localhost:8084,http://localhost:8085,http://localhost:3000,http://localhost:5173"

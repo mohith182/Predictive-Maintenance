@@ -1,0 +1,47 @@
+[Unit]
+Description=UptimeAI FastAPI Backend
+After=network.target
+
+[Service]
+Type=notify
+User=uptimeai
+Group=uptimeai
+WorkingDirectory=/opt/uptimeai-backend/python_backend
+Environment="PATH=/opt/uptimeai-backend/python_backend/venv/bin"
+EnvironmentFile=/opt/uptimeai-backend/python_backend/.env
+ExecStart=/opt/uptimeai-backend/python_backend/venv/bin/gunicorn \
+    -k uvicorn.workers.UvicornWorker \
+    --bind 0.0.0.0:8000 \
+    --workers 4 \
+    --worker-connections 1000 \
+    --timeout 120 \
+    --keep-alive 5 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    main:app
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=uptimeai-backend
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/uptimeai-backend
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictRealtime=true
+RestrictNamespaces=true
+LockPersonality=true
+MemoryDenyWriteExecute=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target
+
+

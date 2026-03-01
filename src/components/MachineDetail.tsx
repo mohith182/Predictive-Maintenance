@@ -108,7 +108,7 @@ const MachineDetail = ({ machine }: MachineDetailProps) => {
           data={liveHistory}
           dataKey="temperature"
           label="Temperature"
-          unit="°C"
+          unit=""
           color="hsl(0, 72%, 55%)"
           isLive
         />
@@ -165,16 +165,11 @@ const MachineDetail = ({ machine }: MachineDetailProps) => {
 
           <TabsContent value="twin" className="mt-4">
             <DigitalTwin
-              machineId={machine.machineId}
-              machineName={machine.name}
+              temperature={liveHistory[liveHistory.length - 1]?.temperature || 65}
+              vibration={liveHistory[liveHistory.length - 1]?.vibration || 2.5}
+              current={liveHistory[liveHistory.length - 1]?.current || 15}
+              healthPercentage={machine.healthScore}
               machineType={machine.type}
-              healthScore={machine.healthScore}
-              sensorData={{
-                temperature: liveHistory[liveHistory.length - 1]?.temperature || 65,
-                vibration: liveHistory[liveHistory.length - 1]?.vibration || 2.5,
-                current: liveHistory[liveHistory.length - 1]?.current || 15,
-              }}
-              status={machine.status}
             />
           </TabsContent>
 
@@ -185,7 +180,7 @@ const MachineDetail = ({ machine }: MachineDetailProps) => {
                   feature: "temperature", 
                   contribution: machine.healthScore >= 70 ? 5 : -15, 
                   value: liveHistory[liveHistory.length - 1]?.temperature || 65, 
-                  unit: "°C" 
+                  unit: "" 
                 },
                 { 
                   feature: "vibration", 

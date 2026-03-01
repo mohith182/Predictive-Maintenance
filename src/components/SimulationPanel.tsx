@@ -129,7 +129,7 @@ export default function SimulationPanel({
                     <Thermometer className="h-3 w-3" /> Temperature
                   </span>
                   <span className="font-mono text-xs">
-                    {tempDelta >= 0 ? '+' : ''}{tempDelta}°C
+                    {tempDelta >= 0 ? '+' : ''}{tempDelta}
                   </span>
                 </div>
                 <Slider

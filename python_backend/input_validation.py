@@ -193,3 +193,4 @@ def get_alert_status(health_percentage: float) -> str:
     else:
         return "Critical"
 
+

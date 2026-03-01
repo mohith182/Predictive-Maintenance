@@ -59,9 +59,9 @@ async def make_prediction(
             temperature=request.temperature,
             vibration=request.vibration,
             current=request.current,
-            pressure=getattr(request, 'pressure', 100.0),
-            runtime_hours=getattr(request, 'runtime_hours', 0),
-            cycle=None,  # Not in current schema, but ready for future
+            pressure=getattr(request, 'pressure', 100.0) or 100.0,
+            runtime_hours=getattr(request, 'runtime_hours', 0) or 0,
+            cycle=getattr(request, 'cycle', None),
             strict=False  # Clamp instead of error for production resilience
         )
     except HTTPException:

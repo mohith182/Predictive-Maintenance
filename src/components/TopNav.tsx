@@ -71,7 +71,7 @@ const TopNav = ({ onSearch, alertCount, alerts = [], isConnected = false, onSele
             <Activity className="h-5 w-5 text-primary" />
           </div>
           <div className="hidden sm:block">
-            <h1 className="font-mono text-sm font-bold tracking-wider text-primary text-glow-primary">
+            <h1 className="font-mono text-2xl font-bold text-primary text-glow-primary tracking-wider">
               Maintenix AI
             </h1>
             <p className="text-[10px] text-muted-foreground">Predictive Maintenance</p>

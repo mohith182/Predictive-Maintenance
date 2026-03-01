@@ -1,0 +1,52 @@
+# Render.com Deployment Configuration
+# Full-stack deployment for Predictive Maintenance System
+
+services:
+  # PostgreSQL Database
+  - type: pg
+    name: uptimeai-database
+    plan: starter  # Free tier available
+    databaseName: uptimeai_db
+    user: uptimeai_user
+
+  # FastAPI Backend
+  - type: web
+    name: uptimeai-backend
+    env: python
+    region: oregon  # Choose your region
+    plan: starter  # Free tier available
+    buildCommand: cd python_backend && pip install -r requirements.txt
+    startCommand: cd python_backend && gunicorn main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --config gunicorn_config.py
+    healthCheckPath: /health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEBUG
+        value: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: uptimeai-database
+          property: connectionString
+      - key: FRONTEND_URL
+        sync: false  # Set manually to your frontend URL
+      - key: CORS_ORIGINS
+        sync: false  # Set manually to your frontend URL
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: PORT
+        value: 8000
+
+  # React Frontend (Static Site)
+  - type: web
+    name: uptimeai-frontend
+    env: static
+    region: oregon
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # Set to your backend URL: https://uptimeai-backend.onrender.com
+
+

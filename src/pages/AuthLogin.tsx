@@ -229,7 +229,7 @@ const Login = () => {
             <Activity className="h-8 w-8 text-primary" />
           </motion.div>
           <h1 className="font-mono text-2xl font-bold text-primary text-glow-primary tracking-wider">
-            UptimeAI
+            Maintenix AI
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             AI-Powered Predictive Maintenance

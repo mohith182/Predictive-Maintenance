@@ -46,6 +46,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:8000/health')"
 
 # Run with gunicorn + uvicorn workers
-CMD ["gunicorn", "main:app", \
-     "--config", "gunicorn_config.py"]
+# Use PORT environment variable if set (for Render/Railway)
+CMD ["sh", "-c", "gunicorn main:app --config gunicorn_config.py --bind 0.0.0.0:${PORT:-8000}"]
 

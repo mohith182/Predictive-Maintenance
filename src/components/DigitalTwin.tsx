@@ -103,7 +103,7 @@ export default function DigitalTwin({
             MOTOR
           </text>
           <text x="120" y="120" textAnchor="middle" fill="white" fontSize="10">
-            {safeTemperature.toFixed(1)}°C
+            {safeTemperature.toFixed(1)}
           </text>
 
           {/* Shaft/Coupling */}
@@ -188,7 +188,7 @@ export default function DigitalTwin({
           "bg-green-500/20 text-green-400"
         }`}>
           <div className="font-semibold">Motor Core</div>
-          <div>{safeTemperature.toFixed(1)}°C</div>
+          <div>{safeTemperature.toFixed(1)}</div>
         </div>
         <div className={`p-2 rounded-lg text-center ${
           isShaftCritical ? "bg-red-500/20 text-red-400" :
